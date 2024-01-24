@@ -1,10 +1,18 @@
 // src/components/DebtTable.jsx
 
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { deleteDebt } from '../redux/actions/debtActions';
+import './DebtTable.css';
 
 function DebtTable() {
     const debts = useSelector(state => state.debts.debts); // Access the debts from the Redux store
+    const dispatch = useDispatch();
+
+    const handleDelete = (id) => {
+        dispatch(deleteDebt(id));
+    };
+
 
     return (
         <table>
@@ -30,6 +38,14 @@ function DebtTable() {
                         {/* Check if interestCost and paymentsLeft are defined before calling toFixed */}
                         <td>{debt.interestCost ? debt.interestCost.toFixed(2) : '0.00'}</td>
                         <td>{debt.paymentsLeft !== undefined ? debt.paymentsLeft : '-'}</td>
+                        <td>
+                            <button
+                                className="delete-button"
+                                onClick={() => handleDelete(debt.id)}
+                            >
+                                X
+                            </button>
+                        </td>
                     </tr>
                 ))}
             </tbody>

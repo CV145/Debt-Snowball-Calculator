@@ -10,7 +10,11 @@ function debtReducer(state = initialState, action) {
                 ...state,
                 debts: [...state.debts, action.payload]
             };
-        // ... other action handlers
+        case 'DELETE_DEBT':
+            return {
+                ...state,
+                debts: state.debts.filter(debt => debt.id !== action.payload)
+            };
         default:
             return state;
     }
