@@ -1,6 +1,7 @@
 // src/redux/reducers/debtReducer.js
 const initialState = {
     debts: [],
+    additionalPayment: 0,
     error: null
 };
 
@@ -25,6 +26,11 @@ function debtReducer(state = initialState, action) {
             return {
                 ...state,
                 error: null // Clear the error state
+            };
+        case 'UPDATE_ADDITIONAL_PAYMENT':
+            return {
+                ...state,
+                additionalPayment: action.payload || 0, // Default to 0 if payload is undefined
             };
         default:
             return state;

@@ -35,12 +35,11 @@ function DebtForm() {
 
     };
 
-    // Function to handle the snowball calculation
-    const handleCalculateSnowball = () => {
-        // Dispatch an action or call a function to calculate the snowball effect
-        // This will likely involve iterating over the debts, ordering them, and applying the additional amount
-        // ...
+    const handleUpdateAdditionalPayment = (value) => {
+        const payload = value || 0; // Default to 0 if value is undefined or empty
+        dispatch(updateAdditionalPayment(payload));
     };
+
 
     // Check if all required fields are filled
     const isFormIncomplete = !creditor || !balance || !interestRate || !paymentAmount;
@@ -89,18 +88,9 @@ function DebtForm() {
                     type="number"
                     className="form-input"
                     value={additionalAmount}
-                    onChange={(e) => setAdditionalAmount(e.target.value)}
+                    onChange={(e) => handleUpdateAdditionalPayment(e.target.value)}
                     placeholder="Extra monthly pay"
                 />
-            </div>
-            <div className="calculate-button-container">
-                <button
-                    type="button"
-                    className="calculate-snowball-button"
-                    onClick={handleCalculateSnowball}
-                >
-                    Calculate Debt Snowball
-                </button>
             </div>
         </div>
     );

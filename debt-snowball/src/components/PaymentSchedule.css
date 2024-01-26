@@ -1,0 +1,25 @@
+.payment-schedule {
+    margin-top: 20px;
+}
+
+.payment-schedule h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.payment-schedule table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.payment-schedule th,
+.payment-schedule td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: right;
+}
+
+.payment-schedule th {
+    background-color: #f4f4f4;
+    color: #333;
+}

@@ -1,0 +1,45 @@
+.summary-results {
+    margin-top: 20px;
+}
+
+.results-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.results-row span {
+    flex: 1;
+    text-align: center;
+}
+
+.results-row span:first-child {
+    text-align: left;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+
+.summary-results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.summary-results-table th,
+.summary-results-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.summary-results-table th {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+/* Add more styling as needed */

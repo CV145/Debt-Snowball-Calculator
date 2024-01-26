@@ -31,6 +31,11 @@ export const clearError = () => ({
     type: 'CLEAR_DEBT_ERROR'
 });
 
+export const updateAdditionalPayment = (amount) => ({
+    type: 'UPDATE_ADDITIONAL_PAYMENT',
+    payload: amount,
+});
+
 
 function calculateDebtInfo(balance, annualInterestRate, paymentAmount) {
     if (paymentAmount <= 0) {
