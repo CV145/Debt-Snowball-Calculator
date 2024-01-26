@@ -1,6 +1,7 @@
 // src/redux/reducers/debtReducer.js
 const initialState = {
-    debts: []
+    debts: [],
+    error: null
 };
 
 function debtReducer(state = initialState, action) {
@@ -14,6 +15,16 @@ function debtReducer(state = initialState, action) {
             return {
                 ...state,
                 debts: state.debts.filter(debt => debt.id !== action.payload)
+            };
+        case 'ADD_DEBT_ERROR':
+            return {
+                ...state,
+                error: action.error // Store the error message in the state
+            };
+        case 'CLEAR_DEBT_ERROR':
+            return {
+                ...state,
+                error: null // Clear the error state
             };
         default:
             return state;

@@ -1,0 +1,100 @@
+/* DebtForm.css */
+.form-input {
+    margin: 0.5rem;
+    /* Adjust the margin value as needed */
+    padding: 0.5rem;
+    /* Adjust the padding value as needed */
+}
+
+/* Add styles to make the input fields look more uniform and easier to interact with */
+.input-field {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    /* Adds space between the fields */
+    box-sizing: border-box;
+}
+
+/* Style for the Add Debt button */
+.add-debt-button {
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+    /* Adds space above the button */
+    background-color: #4CAF50;
+    /* Example button color */
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+/* Hover effect for the button */
+.add-debt-button:hover {
+    background-color: #45a049;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.calculate-snowball-button,
+.clear-form-button {
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    border: none;
+    color: white;
+    background-color: #5cb85c;
+    /* Green for calculate */
+    cursor: pointer;
+}
+
+.clear-form-button {
+    background-color: #d9534f;
+    /* Red for clear */
+}
+
+/* Hover effects */
+.calculate-snowball-button:hover {
+    background-color: #4cae4c;
+}
+
+.clear-form-button:hover {
+    background-color: #c9302c;
+}
+
+.add-debt-button {
+    padding: 0.5rem 1rem;
+    background-color: #4CAF50;
+    /* Example: a nice shade of green */
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-right: 1rem;
+    /* Add some margin if there are other buttons */
+    border-radius: 4px;
+    /* Rounded corners for the button */
+}
+
+.add-debt-button:hover {
+    background-color: #45a049;
+    /* Darker green on hover for visual feedback */
+}
+
+.add-debt-button:disabled {
+    background-color: #1f4323;
+    /* Greyed out */
+    cursor: not-allowed;
+    /* Show 'not-allowed' cursor on hover */
+}
+
+.error-message {
+    color: #d9534f;
+    /* Bootstrap 'danger' color for errors */
+}
+
+/* You can add a class to hide the error message, though it's not strictly necessary */
+.hidden {
+    display: none;
+}

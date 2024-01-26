@@ -1,15 +1,19 @@
 // src/components/DebtForm.jsx
 
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { addDebt } from '../redux/actions/debtActions';
+import './DebtForm.css';
+import { clearError } from '../redux/actions/debtActions';
 
 function DebtForm() {
     const [creditor, setCreditor] = useState('');
     const [balance, setBalance] = useState('');
     const [interestRate, setInterestRate] = useState('');
     const [paymentAmount, setPaymentAmount] = useState('');
+    const [additionalAmount, setAdditionalAmount] = useState('');
     const dispatch = useDispatch();
+    const error = useSelector(state => state.debts.error); // Access error from the Redux store
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -26,16 +30,79 @@ function DebtForm() {
         setBalance('');
         setInterestRate('');
         setPaymentAmount('');
+
+        dispatch(clearError());
+
     };
 
+    // Function to handle the snowball calculation
+    const handleCalculateSnowball = () => {
+        // Dispatch an action or call a function to calculate the snowball effect
+        // This will likely involve iterating over the debts, ordering them, and applying the additional amount
+        // ...
+    };
+
+    // Check if all required fields are filled
+    const isFormIncomplete = !creditor || !balance || !interestRate || !paymentAmount;
+
     return (
-        <form onSubmit={handleSubmit}>
-            <input type="text" value={creditor} onChange={e => setCreditor(e.target.value)} placeholder="Creditor" />
-            <input type="number" value={balance} onChange={e => setBalance(e.target.value)} placeholder="Balance Owed ($)" />
-            <input type="number" value={interestRate} onChange={e => setInterestRate(e.target.value)} placeholder="Interest Rate (%)" />
-            <input type="number" value={paymentAmount} onChange={e => setPaymentAmount(e.target.value)} placeholder="Payment Amount ($)" />
-            <button type="submit">Add Debt</button>
-        </form>
+        <div>
+
+
+            <form onSubmit={handleSubmit} className="debt-form">
+                <input
+                    type="text"
+                    className="form-input input-field"
+                    value={creditor}
+                    onChange={(e) => setCreditor(e.target.value)}
+                    placeholder="Creditor"
+                />
+                <input
+                    type="number"
+                    className="form-input input-field"
+                    value={balance}
+                    onChange={(e) => setBalance(e.target.value)}
+                    placeholder="Balance Owed ($)"
+                />
+                <input
+                    type="number"
+                    className="form-input input-field"
+                    value={interestRate}
+                    onChange={(e) => setInterestRate(e.target.value)}
+                    placeholder="Annual Interest Rate (%)"
+                />
+                <input
+                    type="number"
+                    className="form-input input-field"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    placeholder="Min. Monthly Pay ($)"
+                />
+                <button type="button" className="add-debt-button" onClick={handleSubmit} disabled={isFormIncomplete}>
+                    Add Debt
+                </button>
+            </form>
+            {error && <p className="error-message">{error}</p>}
+            <div className="additional-amount-input">
+                Enter a monthly dollar amount you can add to your debt payoff plan:
+                <input
+                    type="number"
+                    className="form-input"
+                    value={additionalAmount}
+                    onChange={(e) => setAdditionalAmount(e.target.value)}
+                    placeholder="Extra monthly pay"
+                />
+            </div>
+            <div className="calculate-button-container">
+                <button
+                    type="button"
+                    className="calculate-snowball-button"
+                    onClick={handleCalculateSnowball}
+                >
+                    Calculate Debt Snowball
+                </button>
+            </div>
+        </div>
     );
 }
 
