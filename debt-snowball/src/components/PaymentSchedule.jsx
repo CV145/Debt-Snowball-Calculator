@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import './PaymentSchedule.css'; // Make sure to create this CSS file for styling
 
 function PaymentSchedule() {
+    // Initialize paymentSchedule state 
+    const [paymentSchedule, setPaymentSchedule] = useState([]);
     const debts = useSelector(state => state.debts.debts); // Retrieve your debts from the state
     const additionalPayment = useSelector(state => state.additionalPayment) || 0; // Retrieve any additional payment amount
 
@@ -11,67 +13,70 @@ function PaymentSchedule() {
         console.log('Debts:', debts);
         console.log('Additional Payment:', additionalPayment);
 
-
-
         // Clone and sort debts by interest rate from highest to lowest
-        let remainingDebts = [...debts].sort((a, b) => b.interestRate - a.interestRate);
+        let remainingDebts = debts.map(debt => ({ ...debt })).sort((a, b) => b.interestRate - a.interestRate);
         let paymentSchedule = [];
         let month = 0;
 
-        // Continue looping until all debts are paid off or we reach a safety iteration limit to prevent infinite loop
+        // Continue looping until all debts are paid off or we reach a safety iteration limit
         while (remainingDebts.some(debt => debt.balance > 0) && month < 1000) {
             console.log('Loop entered');
-            let monthlyPayments = [];
-
-            // Track available payment, starting with the additional payment amount
-            let availablePayment = additionalPayment;
-
-            for (let i = 0; i < remainingDebts.length; i++) {
-                let debt = remainingDebts[i];
-                let interestPayment = (debt.balance * (debt.interestRate / 100)) / 12;
-                let principalPayment = debt.paymentAmount - interestPayment;
-
-                // If this is the debt with the highest interest rate and we have additional payment
-                if (i === 0) {
-                    principalPayment += availablePayment;
-                }
-
-                if (principalPayment > debt.balance) {
-                    // If the principal payment exceeds the balance, adjust the available payment
-                    availablePayment = principalPayment - debt.balance;
-                    principalPayment = debt.balance;
-                } else {
-                    // No available payment remains
-                    availablePayment = 0;
-                }
-
-                debt.balance -= principalPayment; // Pay off the principal
-                monthlyPayments[i] = principalPayment + interestPayment; // Total payment for this debt this month
-
-                // If the debt is fully paid off, remove it from the array
+            let monthlyPayments = remainingDebts.map(debt => {
                 if (debt.balance <= 0) {
-                    remainingDebts.splice(i, 1);
-                    i--; // Adjust the index to account for the removed element
+                    return 0; // No payment needed for paid off debt
                 }
-            }
+
+                let interestPayment = (debt.balance * (debt.interestRate / 100)) / 12;
+                let principalPayment = Math.min(debt.paymentAmount - interestPayment, debt.balance);
+
+                // If this is the debt with the highest interest rate, add additional payment
+                if (debt === remainingDebts[0]) {
+                    principalPayment += additionalPayment;
+                }
+
+                // Calculate the total payment and update the balance for the next iteration
+                let totalPayment = interestPayment + principalPayment;
+                debt.balance -= principalPayment; // Reduce balance by principal payment
+
+                return totalPayment;
+            });
 
             paymentSchedule.push(monthlyPayments);
-            console.log('Payment schedule for the month:', monthlyPayments);
-            month++; // Increment the month count
+            console.log(`Payment schedule for month ${month + 1}:`, monthlyPayments);
+
+            // Remove fully paid debts
+            remainingDebts = remainingDebts.filter(debt => debt.balance > 0);
+            month++;
         }
 
         if (month >= 1000) {
-            // If we hit the safety limit, log an error and return an empty array
             console.error('Payment schedule calculation exceeded safety iteration limit.');
             return [];
         }
 
-        return paymentSchedule;
+        console.log('Final payment schedule:', paymentSchedule);
+        return paymentSchedule.map(monthPayments =>
+            monthPayments.map(payment => payment.toFixed(2))
+        );
     }
 
 
 
-    const paymentSchedule = generatePaymentSchedule(debts, additionalPayment);
+
+    // Effect to calculate payment schedule when debts or additionalPayment change
+    useEffect(() => {
+        console.log('useEffect is running');
+        console.log('Current debts:', debts);
+        console.log('Current additionalPayment:', additionalPayment);
+
+        const newPaymentSchedule = generatePaymentSchedule(debts, additionalPayment);
+        console.log('New Payment Schedule:', newPaymentSchedule);
+        setPaymentSchedule(newPaymentSchedule);
+
+    }, [debts, additionalPayment]);
+
+    // Dependencies array to determine when the effect should run - the effect will re-run only when one of the dependencies has changed since the last render, an empty array [] means it will only run once
+
 
     if (paymentSchedule.length === 0) {
         console.log('Payment schedule is empty');
@@ -97,12 +102,11 @@ function PaymentSchedule() {
                             <td>{index + 1}</td>
                             {monthlyPayments.map((payment, debtIndex) => (
                                 <td key={debtIndex}>
-                                    {typeof payment === 'number' ? payment.toFixed(2) : '0.00'}
+                                    {payment}
                                 </td>
                             ))}
                         </tr>
                     ))}
-
                 </tbody>
             </table>
         </div>

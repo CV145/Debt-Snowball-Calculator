@@ -17,7 +17,7 @@ function DebtTable() {
 
     return (
         <div>
-            <h1 className="table-header">Debt Snowball Calculator</h1>
+            <h1 className="table-header">Debt Avalanche Calculator</h1>
             <table className="table">
                 <thead>
                     <tr>
