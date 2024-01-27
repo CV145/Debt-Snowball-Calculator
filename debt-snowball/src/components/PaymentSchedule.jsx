@@ -10,9 +10,10 @@ function PaymentSchedule() {
 
     //The generatePaymentSchedule function will generate an array of arrays, where each sub-array represents the payments for a particular month across all debts.
     function generatePaymentSchedule(debts, additionalPayment) {
-        let debtsProgress = debts.map(debt => ({
+        let debtsProgress = debts.map((debt, index) => ({
             ...debt,
-            remainingBalance: debt.balance
+            remainingBalance: debt.balance,
+            originalIndex: index
         })).sort((a, b) => b.interestRate - a.interestRate);
 
         let paymentSchedule = [];
@@ -29,37 +30,64 @@ function PaymentSchedule() {
 
             let budgetUsed = 0;
 
+            // Loop through each debt to make payments
             debtsProgress.forEach((debt, index) => {
                 if (debt.remainingBalance > 0) {
+                    // Calculate the interest for the current period
                     let interestPayment = debt.remainingBalance * (debt.interestRate / 100 / 12);
+                    // Determine the payment amount, ensuring we do not overpay the debt
                     let payment = Math.min(debt.remainingBalance + interestPayment, debt.paymentAmount);
-                    monthlyPayments[index] = payment.toFixed(2);
+                    // If the payment is greater than the remaining balance, adjust it to be the exact payoff amount
+                    if (payment > debt.remainingBalance) {
+                        payment = debt.remainingBalance;
+                    }
+                    // Apply the payment to the debt, subtracting the interest to reduce the principal
                     debt.remainingBalance -= (payment - interestPayment);
-                    budgetUsed += payment; // Track budget used
+                    // Update the budget used with the actual payment amount
+                    budgetUsed += payment;
+                    // Set the payment in the monthlyPayments array using the original index of the debt
+                    monthlyPayments[debt.originalIndex] = payment.toFixed(2);
                 } else {
-                    monthlyPayments[index] = '0.00';
+                    // If the debt is already paid off, set its payment to 0.00
+                    monthlyPayments[debt.originalIndex] = '0.00';
                 }
             });
 
             // Calculate leftover funds after initial payments
             let leftoverFunds = totalMonthlyBudget - budgetUsed;
 
+            // Redistribute leftover funds to debts with the highest interest rate first
             // Redistribute leftover funds while ensuring the total payments don't exceed the budget
-            for (let i = 0; i < debtsProgress.length; i++) {
-                let debt = debtsProgress[i];
-                if (leftoverFunds > 0 && debt.remainingBalance > 0) {
+            debtsProgress.forEach((debt, index) => {
+                if (leftoverFunds <= 0) return;
+
+                if (debt.remainingBalance > 0) {
+                    // Check if we can pay off this debt with the current leftover funds
                     let paymentTowardsDebt = Math.min(leftoverFunds, debt.remainingBalance);
-                    monthlyPayments[i] = (parseFloat(monthlyPayments[i]) + paymentTowardsDebt).toFixed(2);
+                    // If the payment is less than a dollar but not enough to clear the debt, skip to the next iteration
+                    if (paymentTowardsDebt < 1 && paymentTowardsDebt != debt.remainingBalance) {
+                        return;
+                    }
+
+                    monthlyPayments[debt.originalIndex] = (parseFloat(monthlyPayments[debt.originalIndex]) + paymentTowardsDebt).toFixed(2);
                     debt.remainingBalance -= paymentTowardsDebt;
                     leftoverFunds -= paymentTowardsDebt;
                     budgetUsed += paymentTowardsDebt;
 
-                    // Stop redistribution if the total budget is reached
-                    if (budgetUsed >= totalMonthlyBudget) {
-                        break;
-                    }
+                    console.log(`Allocated ${paymentTowardsDebt.toFixed(2)} to Debt #${debt.originalIndex}, Remaining Balance: ${debt.remainingBalance.toFixed(2)}`);
                 }
-            }
+            });
+
+            // Handle any final small payments that are less than a dollar but are the exact remaining balance of a debt
+            debtsProgress.forEach((debt, index) => {
+                if (debt.remainingBalance > 0 && debt.remainingBalance < 1) {
+                    monthlyPayments[debt.originalIndex] = (parseFloat(monthlyPayments[debt.originalIndex]) + debt.remainingBalance).toFixed(2);
+                    console.log(`Final small payment of ${debt.remainingBalance.toFixed(2)} made to Debt #${debt.originalIndex}`);
+                    debt.remainingBalance = 0;
+                }
+            });
+
+
 
             paymentSchedule.push(monthlyPayments);
             month++;
@@ -104,8 +132,8 @@ function PaymentSchedule() {
                     <tr>
                         <th>Pmt#</th>
                         {console.log('Debts:', debts)}
-                        {debts.map((_, index) => (
-                            <th key={index}>{index + 1}</th> // Column headers for each debt
+                        {debts.map((debt, index) => (
+                            <th key={index}>{debt.creditor}</th> // Column headers for each debt
                         ))}
                     </tr>
                 </thead>
