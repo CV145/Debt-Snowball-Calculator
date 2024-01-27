@@ -10,55 +10,84 @@ function PaymentSchedule() {
 
     //The generatePaymentSchedule function will generate an array of arrays, where each sub-array represents the payments for a particular month across all debts.
     function generatePaymentSchedule(debts, additionalPayment) {
-        console.log('Debts:', debts);
-        console.log('Additional Payment:', additionalPayment);
+        // Clone the debts array to avoid mutating the original data
+        let debtsProgress = debts.map(debt => ({
+            ...debt,
+            paidOff: false,
+            remainingBalance: debt.balance + debt.interestCost
+        })).sort((a, b) => b.interestRate - a.interestRate);
 
-        // Clone and sort debts by interest rate from highest to lowest
-        let remainingDebts = debts.map(debt => ({ ...debt })).sort((a, b) => b.interestRate - a.interestRate);
         let paymentSchedule = [];
         let month = 0;
 
-        // Continue looping until all debts are paid off or we reach a safety iteration limit
-        while (remainingDebts.some(debt => debt.balance > 0) && month < 1000) {
-            console.log('Loop entered');
-            let monthlyPayments = remainingDebts.map(debt => {
-                if (debt.balance <= 0) {
-                    return 0; // No payment needed for paid off debt
+        // Function to find the next debt that is not paid off
+        const findNextDebtIndex = (fromIndex) => {
+            return debtsProgress.findIndex((debt, index) => index >= fromIndex && !debt.paidOff);
+        };
+
+        // Continue looping until all debts are paid off
+        while (debtsProgress.some(debt => !debt.paidOff)) {
+
+            //This month's payments
+            let monthlyPayments = [];
+
+            //Leftover funds rolled over to the debt with the next highest interest rate
+            let leftoverFunds = additionalPayment;
+
+
+            //Calculate the payment to make for each debt
+            debtsProgress.forEach((debt, index) => {
+                if (debt.paidOff) {
+                    monthlyPayments[index] = '0.00'; // No payment needed for paid off debt
+                    leftoverFunds += debt.paymentAmount; // Add its payment amount to leftover funds
+                    return;
                 }
 
-                let interestPayment = (debt.balance * (debt.interestRate / 100)) / 12;
-                let principalPayment = Math.min(debt.paymentAmount - interestPayment, debt.balance);
-
-                // If this is the debt with the highest interest rate, add additional payment
-                if (debt === remainingDebts[0]) {
-                    principalPayment += additionalPayment;
+                let payment = debt.paymentAmount;
+                if (index === 0) { // Highest interest rate debt gets additional payment
+                    payment += leftoverFunds;
+                    leftoverFunds = 0; // Reset leftover funds
                 }
 
-                // Calculate the total payment and update the balance for the next iteration
-                let totalPayment = interestPayment + principalPayment;
-                debt.balance -= principalPayment; // Reduce balance by principal payment
-
-                return totalPayment;
+                if (payment >= debt.remainingBalance) {
+                    leftoverFunds = payment - debt.remainingBalance; // Any excess is leftover funds
+                    monthlyPayments[index] = debt.remainingBalance.toFixed(2); // Pay off the debt
+                    debt.remainingBalance = 0; // Debt is now paid off
+                    debt.paidOff = true;
+                } else {
+                    monthlyPayments[index] = payment.toFixed(2); // Make a regular payment
+                    debt.remainingBalance -= payment; // Subtract payment from remaining balance
+                }
             });
 
-            paymentSchedule.push(monthlyPayments);
-            console.log(`Payment schedule for month ${month + 1}:`, monthlyPayments);
+            // After handling payments, distribute any leftover funds to the next highest interest debt
+            let i = 0;
+            while (leftoverFunds > 0 && i < debtsProgress.length) {
+                let debt = debtsProgress[i];
+                if (!debt.paidOff) {
+                    let additionalPaymentToDebt = Math.min(leftoverFunds, debt.remainingBalance);
+                    debt.remainingBalance -= additionalPaymentToDebt;
+                    monthlyPayments[i] = (parseFloat(monthlyPayments[i]) + additionalPaymentToDebt).toFixed(2);
+                    leftoverFunds -= additionalPaymentToDebt;
+                    if (debt.remainingBalance === 0) {
+                        debt.paidOff = true;
+                    }
+                }
+                i++;
+            }
 
-            // Remove fully paid debts
-            remainingDebts = remainingDebts.filter(debt => debt.balance > 0);
+
+            paymentSchedule.push(monthlyPayments);
             month++;
         }
 
-        if (month >= 1000) {
-            console.error('Payment schedule calculation exceeded safety iteration limit.');
-            return [];
-        }
-
-        console.log('Final payment schedule:', paymentSchedule);
-        return paymentSchedule.map(monthPayments =>
-            monthPayments.map(payment => payment.toFixed(2))
-        );
+        return paymentSchedule;
     }
+
+
+
+
+
 
 
 
