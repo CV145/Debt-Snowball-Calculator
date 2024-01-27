@@ -18,46 +18,47 @@ function PaymentSchedule() {
         let paymentSchedule = [];
         let month = 0;
 
+        //Monthly budget
+        let totalMonthlyBudget = debts.reduce((acc, debt) => acc + debt.paymentAmount, 0) + additionalPayment;
+
+
+        //Keep looping as long as there exist unpaid debts
         while (debtsProgress.some(debt => debt.remainingBalance > 0)) {
+            //The payments to make this month, one for each debt
             let monthlyPayments = new Array(debtsProgress.length).fill(0);
-            let leftoverFunds = additionalPayment;
+
+            let budgetUsed = 0;
 
             debtsProgress.forEach((debt, index) => {
-                let interestPayment = debt.remainingBalance * (debt.interestRate / 100 / 12); // Monthly interest
-                let paymentTowardsPrincipal = debt.paymentAmount - interestPayment; // Payment towards principal
-
-                if (paymentTowardsPrincipal < 0) {
-                    paymentTowardsPrincipal = 0; // If the interest is greater than the payment, nothing goes to the principal
-                }
-
-                if (index === 0) { // Highest interest rate debt gets additional payment
-                    paymentTowardsPrincipal += leftoverFunds;
-                    leftoverFunds = 0; // Reset leftover funds
-                }
-
-                let totalPayment = paymentTowardsPrincipal + interestPayment;
-
-                if (totalPayment >= debt.remainingBalance + interestPayment) {
-                    leftoverFunds = totalPayment - debt.remainingBalance - interestPayment; // Any excess is leftover funds
-                    monthlyPayments[index] = (debt.remainingBalance + interestPayment).toFixed(2); // Pay off the debt including interest
-                    debt.remainingBalance = 0; // Debt is now paid off
+                if (debt.remainingBalance > 0) {
+                    let interestPayment = debt.remainingBalance * (debt.interestRate / 100 / 12);
+                    let payment = Math.min(debt.remainingBalance + interestPayment, debt.paymentAmount);
+                    monthlyPayments[index] = payment.toFixed(2);
+                    debt.remainingBalance -= (payment - interestPayment);
+                    budgetUsed += payment; // Track budget used
                 } else {
-                    monthlyPayments[index] = totalPayment.toFixed(2); // Make a regular payment
-                    debt.remainingBalance -= paymentTowardsPrincipal; // Subtract payment from remaining balance
+                    monthlyPayments[index] = '0.00';
                 }
             });
 
-            // After handling payments, distribute any leftover funds to the next highest interest debt
-            let i = 0;
-            while (leftoverFunds > 0 && i < debtsProgress.length) {
+            // Calculate leftover funds after initial payments
+            let leftoverFunds = totalMonthlyBudget - budgetUsed;
+
+            // Redistribute leftover funds while ensuring the total payments don't exceed the budget
+            for (let i = 0; i < debtsProgress.length; i++) {
                 let debt = debtsProgress[i];
-                if (debt.remainingBalance > 0) {
-                    let additionalPaymentToDebt = Math.min(leftoverFunds, debt.remainingBalance);
-                    debt.remainingBalance -= additionalPaymentToDebt;
-                    monthlyPayments[i] = (parseFloat(monthlyPayments[i]) + additionalPaymentToDebt).toFixed(2);
-                    leftoverFunds -= additionalPaymentToDebt;
+                if (leftoverFunds > 0 && debt.remainingBalance > 0) {
+                    let paymentTowardsDebt = Math.min(leftoverFunds, debt.remainingBalance);
+                    monthlyPayments[i] = (parseFloat(monthlyPayments[i]) + paymentTowardsDebt).toFixed(2);
+                    debt.remainingBalance -= paymentTowardsDebt;
+                    leftoverFunds -= paymentTowardsDebt;
+                    budgetUsed += paymentTowardsDebt;
+
+                    // Stop redistribution if the total budget is reached
+                    if (budgetUsed >= totalMonthlyBudget) {
+                        break;
+                    }
                 }
-                i++;
             }
 
             paymentSchedule.push(monthlyPayments);
